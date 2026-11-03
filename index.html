@@ -198,6 +198,12 @@
   .story-photo img { width: 100%; height: auto; aspect-ratio: 562 / 806; object-fit: cover; }
   .story-text h2 { margin-bottom: 30px; }
   .story-text p { max-width: 62ch; }
+  .story-video { margin-top: clamp(36px, 5vw, 56px); display: flex; flex-direction: column; gap: 18px; }
+  .story-video .eyebrow { margin-bottom: 0; }
+  .video-frame { position: relative; aspect-ratio: 16 / 9; width: 100%; background: #111; box-shadow: 0 24px 50px rgba(0,0,0,.4); overflow: hidden; }
+  .video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 1; }
+  .video-fallback { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted-on-dark); font-size: 13px; letter-spacing: .18em; text-transform: uppercase; text-decoration: none;
+    background: #111 url("https://i.ytimg.com/vi/EzwOsm_Ij8I/hqdefault.jpg") center / cover; }
 
   /* ---------- Let's chat ---------- */
   .chat { text-align: center; }
@@ -378,6 +384,16 @@
         <p>After navigating an abusive marriage and a divorce, I spent three months in Italy, healing and reigniting my passion for art and design in Florence.</p>
         <p>Now I’m bringing everything I’ve learned to creators. I manage creators and personal brands and help them grow online, from their brand and content to product launches and the AI systems that keep it all running. I’m a creator too, going LIVE on TikTok every day, so I know firsthand what it takes to show up for an audience.</p>
         </div>
+
+        <div class="story-video" id="storyVideo">
+          <span class="eyebrow">As seen on WISH-TV's Indy Style</span>
+          <div class="video-frame">
+            <iframe id="storyVideoFrame" title="Three 2 Thrive: a simple strategy to accomplish your goals, Hannah Abba on WISH-TV Indy Style"
+              data-src="https://www.youtube-nocookie.com/embed/EzwOsm_Ij8I?enablejsapi=1&amp;autoplay=1&amp;mute=1&amp;playsinline=1&amp;rel=0&amp;modestbranding=1"
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
+            <a class="video-fallback" href="https://youtu.be/EzwOsm_Ij8I" target="_blank" rel="noopener">Watch on YouTube</a>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -530,6 +546,25 @@
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(setMarqueeSpeed);
   addEventListener('resize', setMarqueeSpeed);
 
+
+  // About-me video: loads and starts (muted) when it scrolls into view, pauses when it leaves
+  (function () {
+    const frame = document.getElementById('storyVideoFrame');
+    const box = document.getElementById('storyVideo');
+    if (!frame || !('IntersectionObserver' in window)) { if (frame) frame.src = frame.dataset.src.replace('autoplay=1', 'autoplay=0'); return; }
+    let loaded = false;
+    const send = func => { try { frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*'); } catch (e) {} };
+    new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          if (!loaded) { frame.src = frame.dataset.src + '&origin=' + encodeURIComponent(location.origin); loaded = true; }
+          else send('playVideo');
+        } else if (loaded) {
+          send('pauseVideo');
+        }
+      });
+    }, { threshold: 0.5 }).observe(box.querySelector('.video-frame'));
+  })();
 </script>
 </body>
 </html>
